@@ -6,7 +6,7 @@ const diagnostics = readFileSync('src/3/input.txt', 'utf8')
 type Bit = '0' | '1'
 type BitFilter = (diagnostics: string[], pos: number) => Bit
 
-function getMostCommonBit(diagnostics: string[], pos: number): Bit {
+function countBits(diagnostics: string[], pos: number): { ones: number, zeros: number } {
   let ones = 0
   let zeros = 0 
 
@@ -15,20 +15,18 @@ function getMostCommonBit(diagnostics: string[], pos: number): Bit {
     else if (line[pos] === '0') zeros++
   }
 
+  return { ones, zeros }
+}
+
+function getMostCommonBit(diagnostics: string[], pos: number): Bit {
+  const { ones, zeros } = countBits(diagnostics, pos)
   if (ones >= zeros)
     return '1'
   return '0'
 }
 
 function getLeastCommonBit(diagnostics: string[], pos: number): Bit {
-  let ones = 0
-  let zeros = 0 
-
-  for (const line of diagnostics) {
-    if (line[pos] === '1') ones++
-    else if (line[pos] === '0') zeros++
-  }
-
+  const { ones, zeros } = countBits(diagnostics, pos)
   if (zeros <= ones)
     return '0'
   return '1'
