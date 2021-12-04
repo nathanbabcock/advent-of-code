@@ -23,15 +23,20 @@ const boards = blocks
 
 function getScore(numbers: number[], boards: Matrix[]): number {
   const curNumbers = []
+  const boardWon = boards.map(board => false)
+  let lastWinningScore = NaN
   for (const number of numbers) {
     curNumbers.push(number)
     for (const board of boards) {
+      const index = boards.indexOf(board)
       const mask = board.toMask(curNumbers)
       if (!mask.bingo()) continue
-      return mask.invert().mult(board).sum() * number
+      const score = mask.invert().mult(board).sum() * number
+      boardWon[index] = true
+      if (boardWon.every(Boolean)) return score
     }
   }
-  return NaN
+  return lastWinningScore
 }
 
 const score = getScore(numbers, boards)
