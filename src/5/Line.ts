@@ -11,7 +11,9 @@ export class Point {
   static getMax(points: Point[]): Point {
     const x = points.map(point => point.x)
     const y = points.map(point => point.y)
-    return new Point(Math.max(...x), Math.max(...y))
+    const maxX = x.reduce((a, b) => Math.max(a, b))
+    const maxY = y.reduce((a, b) => Math.max(a, b))
+    return new Point(maxX, maxY)
   }
 }
 
@@ -21,7 +23,7 @@ export class Line {
     this.b = b
   }
 
-  getPoints(): Point[] {
+  getPoints(allowDiag = false): Point[] {
     const points = []
     if (this.a.x === this.b.x)
       for (let y = Math.min(this.a.y, this.b.y); y <= Math.max(this.a.y, this.b.y); y++)
@@ -29,7 +31,20 @@ export class Line {
     else if (this.a.y === this.b.y)
       for (let x = Math.min(this.a.x, this.b.x); x <= Math.max(this.a.x, this.b.x); x++)
         points.push(new Point(x, this.a.y))
-    // else console.warn('Line is not a horizontal or vertical line')
+    else if (allowDiag && Math.abs(this.a.x - this.b.x) === Math.abs(this.a.y - this.b.y)) {
+      let start: Point
+      let end: Point
+      if (this.a.x <= this.b.x) {
+        start = this.a
+        end = this.b
+      } else {
+        start = this.b
+        end = this.a
+      }
+      const dy = end.y > start.y ? 1 : -1
+      for (let x = start.x; x <= end.x; x++)
+        points.push(new Point(x, start.y + (x - start.x) * dy))
+    }
     return points
   }
 
