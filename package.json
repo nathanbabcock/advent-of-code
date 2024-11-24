@@ -1,25 +1,30 @@
 {
-  "name": "advent-of-code-2021",
-  "version": "1.0.0",
-  "description": "<https://adventofcode.com/2021>",
-  "main": "index.js",
-  "type": "module",
+  "name": "advent-of-code",
+  "version": "0.0.0",
+  "directories": {
+    "lib": "lib"
+  },
   "scripts": {
-    "start": "npm run watch",
-    "watch": "tsc --watch",
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "today": "vite-node 2022/10/10-1.ts"
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/nathanbabcock/advent-of-code-2021.git"
+    "url": "git+https://github.com/nathanbabcock/advent-of-code-2022.git"
   },
   "author": "Nathan Babcock",
-  "license": "UNLICENSED",
+  "license": "ISC",
   "bugs": {
-    "url": "https://github.com/nathanbabcock/advent-of-code-2021/issues"
+    "url": "https://github.com/nathanbabcock/advent-of-code/issues"
   },
-  "homepage": "https://github.com/nathanbabcock/advent-of-code-2021#readme",
+  "homepage": "https://github.com/nathanbabcock/advent-of-code#readme",
   "dependencies": {
-    "@types/node": "^16.11.11"
+    "@silvia-odwyer/photon-node": "^0.3.2",
+    "chalk": "^5.1.2",
+    "tesseract.js": "^4.0.1",
+    "zod": "^3.19.1"
+  },
+  "devDependencies": {
+    "@types/node": "^18.11.10",
+    "vite-node": "^0.25.3"
   }
 }
