@@ -1,15 +1,12 @@
 {
   "name": "advent-of-code",
   "version": "0.0.0",
-  "directories": {
-    "lib": "lib"
-  },
   "scripts": {
-    "today": "vite-node 2022/10/10-1.ts"
+    "today": "vite-node 2024/01/1-2.ts"
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/nathanbabcock/advent-of-code-2022.git"
+    "url": "git+https://github.com/nathanbabcock/advent-of-code.git"
   },
   "author": "Nathan Babcock",
   "license": "ISC",
@@ -18,13 +15,14 @@
   },
   "homepage": "https://github.com/nathanbabcock/advent-of-code#readme",
   "dependencies": {
-    "@silvia-odwyer/photon-node": "^0.3.2",
-    "chalk": "^5.1.2",
-    "tesseract.js": "^4.0.1",
-    "zod": "^3.19.1"
+    "@silvia-odwyer/photon-node": "^0.3.3",
+    "chalk": "^5.3.0",
+    "tesseract.js": "^4.1.4",
+    "zod": "^3.23.8"
   },
   "devDependencies": {
-    "@types/node": "^18.11.10",
-    "vite-node": "^0.25.3"
+    "@types/node": "^22.10.1",
+    "typescript": "^5.7.2",
+    "vite-node": "^2.1.6"
   }
 }
