@@ -13,16 +13,42 @@ const lines = readFileSync(inputFile, 'utf-8')
     .map(Number)
   )
 
-// O(n^2) solution
-const numSafe = lines.filter(line => {
-  return new Array(line.length).fill(0).map((_, i) => {
-    const diffs = line.toSpliced(i, 1).map((num, i, arr) => {
-      const prev = arr[i - 1] || 0
-      return num - prev
-    }).toSpliced(0, 1)
-    return diffs.every(diff => diff >= 1 && diff <= 3)
-      || diffs.every(diff => diff <= -1 && diff >= -3)
-  }).some(Boolean)
-}).length
+function checkLevels(levels: number[]): { isSafe: true } | { isSafe: false, errorIndex: number } {
+  let direction: 'increasing' | 'decreasing' | undefined
+  for (let i = 1; i < levels.length; i++) {
+    const curr = levels[i]
+    const prev = levels[i - 1]
+    const diff = curr - prev
+    if (direction === undefined) {
+      if (diff > 0) {
+        direction = 'increasing'
+      } else if (diff < 0) {
+        direction = 'decreasing'
+      } else {
+        return { isSafe: false, errorIndex: i }
+      }
+    }
+    if (direction === 'increasing' && diff <= 0 || diff > 3)
+      return { isSafe: false, errorIndex: i }
+    if (direction === 'decreasing' && (diff >= 0 || diff < -3))
+      return { isSafe: false, errorIndex: i }
+  }
+  return { isSafe: true }
+}
+
+function isSafe(levels: number[]): boolean {
+  return checkLevels(levels).isSafe
+}
+
+function isSafeWithProblemDampener(levels: number[]): boolean {
+  const checkResult = checkLevels(levels)
+  if (checkResult.isSafe) return true
+  const { errorIndex } = checkResult
+  return isSafe(levels.toSpliced(errorIndex, 1))
+    || isSafe(levels.toSpliced(errorIndex - 1, 1))
+    || isSafe(levels.toSpliced(errorIndex - 2, 1))
+}
+
+const numSafe = lines.filter(isSafeWithProblemDampener).length
 
 console.log(numSafe)
