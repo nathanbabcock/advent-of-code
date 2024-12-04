@@ -89,9 +89,7 @@ function visitAllNeighbors(row: number, col: number, callback: (row: number, col
 }
 
 // remove all non-diagonal paths
-finishedPaths = finishedPaths.filter(p =>
-  p.direction!.every(d => d !== 0)
-)
+finishedPaths = finishedPaths.filter(p => !p.direction!.includes(0))
 
 // O(n^2): check path intersections
 finishedPaths = finishedPaths.filter(p =>
