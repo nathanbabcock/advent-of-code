@@ -23,10 +23,6 @@ function isValid(update: number[], rule: { before: number, after: number }) {
   return { valid: true }
 }
 
-function isAllValid(update: number[]) {
-  return orderingRules.every(rule => isValid(update, rule).valid)
-}
-
 function getMiddle(array: number[]) {
   console.assert(array.length % 2 === 1)
   const index = (array.length - 1) / 2
@@ -40,7 +36,6 @@ function fixOrdering(update: number[], rule: { before: number, after: number }):
     const fixed = update
       .toSpliced(beforeIndex, 1)
       .toSpliced(afterIndex, 0, update[beforeIndex])
-    console.log("fixed from", update, "to", fixed)
     return fixed
   } else {
     return update
@@ -49,17 +44,18 @@ function fixOrdering(update: number[], rule: { before: number, after: number }):
 
 // O(m * n^2)
 const sum = updates.map(update => {
-  const results = orderingRules.map(rule => isValid(update, rule))
-  let invalidResults = results.filter(result => !result.valid)
-  if (invalidResults.length === 0) return 0
-  let newUpdate = update
-  while (invalidResults.length > 0) {
-    newUpdate = fixOrdering(newUpdate, invalidResults.at(0)!.rule!)
-    invalidResults = orderingRules
-      .map(rule => isValid(newUpdate, rule))
-      .filter(result => !result.valid)
+  let fixedUpdate = update
+  const getInvalid = () => orderingRules
+    .map(rule => isValid(fixedUpdate, rule))
+    .filter(result => !result.valid)
+
+  if (getInvalid().length === 0) return 0
+
+  for (let latestInvalid = getInvalid(); latestInvalid.length > 0; latestInvalid = getInvalid()) {
+    fixedUpdate = fixOrdering(fixedUpdate, latestInvalid.at(0)!.rule!)
   }
-  return getMiddle(newUpdate)
+
+  return getMiddle(fixedUpdate)
 }).reduce((a, b) => a + b, 0)
 
 console.log(sum)
