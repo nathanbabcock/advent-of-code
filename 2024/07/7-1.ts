@@ -8,7 +8,7 @@ type Operator = {
   eval: (a: number, b: number) => number
 }
 
-const BOUND_OPERATORS = [
+const OPERATORS = [
   Object.freeze({ token: '+', eval: (a, b) => a + b }),
   Object.freeze({ token: '*', eval: (a, b) => a * b }),
 
@@ -16,15 +16,9 @@ const BOUND_OPERATORS = [
   Object.freeze({ token: '||', eval: (a, b) => Number(`${a}${b}`) }),
 ] as const satisfies Readonly<Operator[]>
 
-const UNBOUND = Object.freeze({
-  token: '?',
-  eval() { throw new Error(`eval called w/ unbound operator`) }
-}) satisfies Operator
-
 type Equation = {
   result: number
   operands: number[]
-  operators: Operator[]
 }
 
 const inputFile = join(__dirname, 'input.txt')
@@ -38,67 +32,58 @@ function parseEquation(line: string): Equation {
   console.assert(parts[0].endsWith(':'))
   const result = Number(parts[0].slice(0, -1))
   const operands = parts.slice(1).map(Number)
-  const operators = Array
-    .from({ length: operands.length - 1 })
-    .fill(UNBOUND) as typeof UNBOUND[]
-  return { result, operands, operators }
+  return { result, operands }
 }
 
-function evalEquation(equation: Equation): number {
-  const remainingOperands = [...equation.operands]
-  const remainingOperators = [...equation.operators]
-
-  while (remainingOperands.length > 1) {
-    const operandA = remainingOperands.shift()!
-    const operandB = remainingOperands.shift()!
-    const operator = remainingOperators.shift()!
-    const curResult = operator.eval(operandA, operandB)
-    remainingOperands.unshift(curResult)
-  }
-
-  return remainingOperands[0]
-}
-
-/** Returns an array of all possible permutations of unbound operators in the input */
-function permuteOperands(equation: Equation): Equation[] {
-  const { operators } = equation
-  const firstUnboundOperatorIndex = operators.indexOf(UNBOUND)
-  if (firstUnboundOperatorIndex === -1) return [equation]
-
-  return BOUND_OPERATORS
-    .map(operator => ({
-      ...equation,
-      operators: operators.with(firstUnboundOperatorIndex, operator)
-    }))
-    .flatMap(permuteOperands)
-}
-
-function progressMessage(message: string, i: number, total: number,): void {
+function progressMessage(message: string, i: number, total: number): void {
   if (i > 0) {
     process.stdout.clearLine(0)
     process.stdout.cursorTo(0)
   }
   process.stdout.write(`${message} ${i + 1} / ${total}`)
-  if (i + 1 === total)
+  if (i + 1 === total) {
     process.stdout.write('\n')
+  }
+}
+
+/** Returns the result if the equation can be satisfied, or 0 otherwise */
+function checkEquation(equation: Equation): number {
+  const partialEquations: Equation[] = [equation]
+
+  while (partialEquations.length > 0) {
+    const curEquation = partialEquations.shift()!
+    console.assert(curEquation.operands.length >= 2)
+    const operandA = curEquation.operands.at(0)!
+    const operandB = curEquation.operands.at(1)!
+    for (const operator of OPERATORS) {
+      const result = operator.eval(operandA, operandB)
+
+      const newEquation: Equation = {
+        result: curEquation.result,
+        operands: [result].concat(curEquation.operands.slice(2)),
+      }
+
+      if (result > curEquation.result) {
+        // Optimization: there's now way to decrease a partial result value,
+        // so exit early if we've already gone too high
+        continue
+      }
+
+      if (newEquation.operands.length > 1) {
+        partialEquations.unshift(newEquation)
+      } else if (result === curEquation.result) {
+        return result
+      }
+    }
+  }
+
+  return 0
 }
 
 const totalCalibrationResult = equations
-  .map((equation, i) => {
-    progressMessage('Calibrating equation', i, equations.length)
-
-    const permutations = permuteOperands(equation)
-
-    // todo: optimize by checking min/max possible result first
-
-    for (const permutation of permutations) {
-      const actualResult = evalEquation(permutation)
-
-      // console.log(permutation.operands.map((operand, index) => operand.toString() + (permutation.operators.at(index) ?? '=')).join('') + actualResult + (actualResult === equation.result ? '✅' : ''))
-
-      if (actualResult === equation.result) return equation.result
-    }
-    return 0
+  .map((eq, i) => {
+    progressMessage("Checking equation", i, equations.length)
+    return checkEquation(eq)
   }).reduce((a, b) => a + b, 0)
 
 console.log(totalCalibrationResult)
