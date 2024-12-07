@@ -1,33 +1,16 @@
 console.time()
 
 import { readFileSync } from 'node:fs'
+import { cpus } from 'node:os'
 import { join } from 'node:path'
-
-type Operator = {
-  token: string
-  eval: (a: number, b: number) => number
-}
-
-const OPERATORS = [
-  Object.freeze({ token: '+', eval: (a, b) => a + b }),
-  Object.freeze({ token: '*', eval: (a, b) => a * b }),
-
-  // part 2:
-  Object.freeze({ token: '||', eval: (a, b) => Number(`${a}${b}`) }),
-] as const satisfies Readonly<Operator[]>
+import { Worker } from 'node:worker_threads'
 
 type Equation = {
   result: number
   operands: number[]
 }
 
-const inputFile = join(__dirname, 'input.txt')
-const equations = readFileSync(inputFile, 'utf-8')
-  .trim()
-  .split('\r\n')
-  .map(parseEquation)
-
-function parseEquation(line: string): Equation {
+export function parseEquation(line: string): Equation {
   const parts = line.split(' ')
   console.assert(parts[0].endsWith(':'))
   const result = Number(parts[0].slice(0, -1))
@@ -46,45 +29,35 @@ function progressMessage(message: string, i: number, total: number): void {
   }
 }
 
-/** Returns the result if the equation can be satisfied, or 0 otherwise */
-function checkEquation(equation: Equation): number {
-  const partialEquations: Equation[] = [equation]
+const inputFile = join(__dirname, 'input.txt')
+const equations = readFileSync(inputFile, 'utf-8')
+  .trim()
+  .split('\r\n')
+  .map(parseEquation)
 
-  while (partialEquations.length > 0) {
-    const curEquation = partialEquations.shift()!
-    console.assert(curEquation.operands.length >= 2)
-    const operandA = curEquation.operands.at(0)!
-    const operandB = curEquation.operands.at(1)!
-    for (const operator of OPERATORS) {
-      const result = operator.eval(operandA, operandB)
+// divide work into batches
+const batchCount = Math.min(18, cpus().length)
+console.log('Parallelism: ' + batchCount)
+const batchSize = Math.ceil(equations.length / batchCount)
+const batches = Array.from({ length: batchCount }, (_, i) =>
+  equations.slice(i * batchSize, (i + 1) * batchSize)
+)
 
-      const newEquation: Equation = {
-        result: curEquation.result,
-        operands: [result].concat(curEquation.operands.slice(2)),
-      }
+console.assert(batches.map(b => b.length).reduce((a, b) => a + b, 0) === equations.length)
 
-      if (result > curEquation.result) {
-        // Optimization: there's now way to decrease a partial result value,
-        // so exit early if we've already gone too high
-        continue
-      }
+let totalCalibrationResult = 0
+let resultsReceived = 0
 
-      if (newEquation.operands.length > 1) {
-        partialEquations.unshift(newEquation)
-      } else if (result === curEquation.result) {
-        return result
-      }
+// Spawn workers for each batch
+const workerScript = new URL('./7-worker.mjs', import.meta.url)
+for (const batch of batches) {
+  const worker = new Worker(workerScript, { workerData: batch })
+  worker.postMessage(batch)
+  worker.on('message', (calibrationResult: number) => {
+    totalCalibrationResult += calibrationResult
+    if (++resultsReceived === batchCount) {
+      console.log(totalCalibrationResult)
+      console.timeEnd()
     }
-  }
-
-  return 0
+  })
 }
-
-const totalCalibrationResult = equations
-  .map((eq, i) => {
-    progressMessage("Checking equation", i, equations.length)
-    return checkEquation(eq)
-  }).reduce((a, b) => a + b, 0)
-
-console.log(totalCalibrationResult)
-console.timeEnd()
