@@ -1,6 +1,8 @@
 import { readFileSync } from 'node:fs'
 import { join } from 'node:path'
 
+console.time()
+
 const inputFile = join(__dirname, 'input.txt')
 const stones = readFileSync(inputFile, 'utf-8').trim()
 
@@ -19,45 +21,25 @@ function blink(stones: string): string {
   return `${Number(stone) * 2024}`
 }
 
-function progressMessage(message: string, i: number, total: number): void {
-  if (i > 0) {
-    process.stdout.clearLine(0)
-    process.stdout.cursorTo(0)
-  }
-  process.stdout.write(`${message} ${i + 1} / ${total}`)
-  if (i + 1 === total) {
-    process.stdout.write('\n')
-  }
+const cache = new Map<string, number>()
+function countStones(singleStone: string, blinkTimes: number): number {
+  if (blinkTimes === 0) return 1
+  const cacheKey = `${singleStone}-${blinkTimes}`
+  if (cache.has(cacheKey)) return cache.get(cacheKey)!
+  const nextStones = blink(singleStone).split(' ')
+  const count = nextStones
+    .map(stone => countStones(stone, blinkTimes - 1))
+    .reduce((a, b) => a + b, 0)
+  cache.set(cacheKey, count)
+  return count
 }
 
-function blinkTimes(stones: string, n: number): string {
-  for (let i = 0; i < n; i++) {
-    stones = blink(stones)
-    progressMessage('blink', i, n)
-  }
-  return stones
-}
-
-function numStones(stones: string): number {
-  return stones.split(' ').length
-}
-
-function analyzeStoneDistribution(stones: string): void {
-  const stoneCounts: Map<string, number> = new Map()
-  const totalStones = stones.split(' ').length
-  stones.split(' ').forEach(stone => {
-    const prevNum = stoneCounts.get(stone) ?? 0
-    stoneCounts.set(stone, prevNum + 1)
-  })
-  console.log(stoneCounts
-    .entries()
-    .toArray()
-    .map(x => [x[0], x[1] / totalStones] as const)
-    .toSorted((a, b) => b[1] - a[1])
-    .slice(0, 10))
-}
-
-const newStones = blinkTimes(stones, 35)
-const count = numStones(newStones)
+const blinkTimes = 75
+const count = stones
+  .split(' ')
+  .map(stone => countStones(stone, blinkTimes))
+  .reduce((a, b) => a + b, 0)
 console.log(count)
-analyzeStoneDistribution(newStones)
+console.log(`Cache size: ${cache.size}`)
+
+console.timeEnd()
