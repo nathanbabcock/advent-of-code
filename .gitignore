@@ -1,2 +1,4 @@
 node_modules
 dist
+2022/*/*.txt
+**/*/input.txt
