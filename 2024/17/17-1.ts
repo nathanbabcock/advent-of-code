@@ -4,7 +4,9 @@ import { compileAndRun } from './17.lib'
 
 function loadFile(filename: string) {
   const inputFile = join(__dirname, filename)
-  const input = readFileSync(inputFile, 'utf-8')
-  return compileAndRun(input)
+  return readFileSync(inputFile, 'utf-8')
 }
 
+const input = loadFile('input.txt')
+const result = compileAndRun(input)
+console.log(result.output.split('').join(','))
