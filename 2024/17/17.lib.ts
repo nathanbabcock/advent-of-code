@@ -21,7 +21,6 @@ export function compile(instructions: string): Program {
       instructionPointer = result.newInstructionPointer
       output = result.newOutput
       outputRegisters = result.newRegisters
-      console.log({ instructionPointer, output, outputRegisters })
     }
 
     return { output, registers: outputRegisters }
@@ -61,7 +60,7 @@ function evalComboOperand(operand: number, registers: Registers): number {
   else throw new Error(`Invalid operand ${operand}`)
 }
 
-const DEBUG: boolean = true
+const DEBUG: boolean = false
 
 const adv: Operator = (operand, registers, output, instructionPointer) => {
   const newA = Math.floor(registers.a / Math.pow(2, evalComboOperand(operand, registers)))
@@ -74,7 +73,7 @@ const adv: Operator = (operand, registers, output, instructionPointer) => {
 }
 
 const bxl: Operator = (operand, registers, output, instructionPointer) => {
-  const newB = registers.b ^ operand
+  const newB = Number(BigInt(registers.b) ^ BigInt(operand))
   if (DEBUG) console.log(`bxl ${operand} => b=${newB}`)
   return {
     newRegisters: { ...registers, b: newB },
@@ -103,7 +102,7 @@ const jnz: Operator = (operand, registers, output, instructionPointer) => {
 }
 
 const bxc: Operator = (operand, registers, output, instructionPointer) => {
-  const newB = registers.b ^ registers.c
+  const newB = Number(BigInt(registers.b) ^ BigInt(registers.c))
   if (DEBUG) console.log(`bxc ${operand} => b=${newB}`)
   return {
     newRegisters: { ...registers, b: newB },

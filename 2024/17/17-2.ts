@@ -1,60 +1,17 @@
-/** A precondition that is true before the specified operation */
-type Fact = {
-  iterationNumber: number
-  operationNumber: number
-  aConstraints?: Constraint[]
-  bConstraints?: Constraint[]
-}
+import { readFileSync } from 'node:fs'
+import { compileAndRun } from './17.lib'
+import { join } from 'node:path'
 
-type Constraint = {
-  condition: (value: number) => boolean
-  generator: (i: number) => number
-  description: string
-  reasoning?: string
+function loadFile(filename: string) {
+  const inputFile = join(__dirname, filename)
+  return readFileSync(inputFile, 'utf-8')
 }
-
+//           0   3   5   5   7   1   7   4   3   0   5   7   2   1   4   2
+const A = 0b101_011_010_010_011_101_000_001_011_100_000_011_110_000_001_111
+const input = loadFile('input.txt').replace(/Register A: \d+/, `Register A: ${A.toString()}`)
+const result = compileAndRun(input)
 const program = '2412750347175530'
-
-// 0: 2, 4 = bst 4 => B = A % 8
-// 1: 1, 2 = bxl 2 => B = B XOR 2
-// 2: 7, 5 = cdv 5 => C = floor(A / 2^B)
-// 3: 0, 3 = adv 3 => A = floor(A / 8)
-// 4: 4, 7 = bxc 7 => B = B XOR C
-// 5: 1, 7 = bxl 7 => B = B XOR 7
-// 6: 5, 5 = out 5 => out = out + B
-// 7: 3, 0 = jnz 0 => if A != 0 goto 0
-
-const facts: Fact[] = []
-
-// The loop must terminate on the last iteration
-facts.push({
-  iterationNumber: program.length - 1,
-  operationNumber: 7,
-  aConstraints: [{
-    condition: (value) => value !== 0,
-    generator: (i) => i + 1,
-    description: 'A != 0',
-  }],
-})
-
-// The last digit outputted must be the last digit of the program
-facts.push({
-  iterationNumber: program.length - 1,
-  operationNumber: 6,
-  bConstraints: [{
-    condition: (value) => value % 7 === 0,
-    generator: (i) => 7 * i,
-    description: 'B % 7 === 0',
-  }]
-})
-
-// (B XOR 7) % 7 === 0
-facts.push({
-  iterationNumber: program.length - 1,
-  operationNumber: 5,
-  bConstraints: [{
-    condition: (value) => (value ^ 7) % 7 === 0,
-    generator: (i) => (7 * i) ^ 7, // todo: verify
-    description: '(B XOR 7) % 7 === 0'
-  }]
-})
+console.log(`program=${program}`)
+console.log(` output=${result.output}`)
+console.assert(program === result.output)
+console.log(`A=${A.toString()}`)
