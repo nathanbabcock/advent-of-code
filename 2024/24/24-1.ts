@@ -59,6 +59,8 @@ function solve(wires: Map<string, WireValue>): number {
   return decimal
 }
 
+console.time()
 const wires = loadFile('input.txt')
 const answer = solve(wires)
+console.timeEnd()
 console.log(answer)
